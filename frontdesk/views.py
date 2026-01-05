@@ -1,31 +1,27 @@
 import itertools
 
-from django.shortcuts import render
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import generics
-from rest_framework import status
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics, status
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from rest_framework.renderers import JSONRenderer
-
-
-from .serializers import GetCustomersSerializer, CarSerialoizer, CarAvailabilitySerializer, DisplayCarsSerializer, \
-    DisplayCarsDetailsRelationsSerializer,DisplayCarsImageCreateSerializer,FrontDeskDashboardSerializer
-from .custom_serializer import Dashboard
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from account.models import Account
-from cars.models import Cars, DisplayCars,DisplayCarImages
 from advisor.models import AdvisorsOnline
+from cars.models import Cars, DisplayCarImages, DisplayCars
 from services.models import Services
+
+from .custom_serializer import Dashboard
 from .models import CarEnquiresmodel
 from .paginations import DisplayCarsPagination
-from account.custom_permissions import IsFrontDesk
-from django.db.models import Q
-
-
+from .serializers import (
+    CarAvailabilitySerializer,
+    DisplayCarsSerializer,
+    FrontDeskDashboardSerializer,
+    GetCustomersSerializer,
+)
 
 # Create your views here.
 
@@ -37,32 +33,36 @@ class CreateCustomer(APIView):
     def post(self, request):
         body = request.data
         print(body)
-        if Account.objects.filter(phone_number=body['phone_number']).exists():
-            data = {'message': "phone number already exists"}
+        if Account.objects.filter(phone_number=body["phone_number"]).exists():
+            data = {"message": "phone number already exists"}
             return Response(data=data, status=status.HTTP_409_CONFLICT)
-        elif Account.objects.filter(email=body['email']).exists():
-            data = {'message': "email already exists"}
+        elif Account.objects.filter(email=body["email"]).exists():
+            data = {"message": "email already exists"}
             return Response(data=data, status=status.HTTP_409_CONFLICT)
-        elif Account.objects.filter(username=body['username']).exists():
-            data = {'message': "username already exists"}
+        elif Account.objects.filter(username=body["username"]).exists():
+            data = {"message": "username already exists"}
             return Response(data=data, status=status.HTTP_409_CONFLICT)
         else:
 
-            user = Account.objects.create_customer(username=body['username'], email=body['email'],
-                                                   phone_number=body['phone_number'], password=body['phone_number'])
+            user = Account.objects.create_customer(
+                username=body["username"],
+                email=body["email"],
+                phone_number=body["phone_number"],
+                password=body["phone_number"],
+            )
 
-            car = Cars.objects.get(engine_number=body['engine_number'])
+            car = Cars.objects.get(engine_number=body["engine_number"])
             car.user = user
             car.save()
-            data = {'message': "customer created successfully"}
+            data = {"message": "customer created successfully"}
         return Response(status=status.HTTP_201_CREATED)
 
 
 class UpdateCustomer(APIView):
     def post(self, request):
         body = request.data
-        user = Account.objects.get(id=body['user_id'])
-        car = Cars.objects.get(engine_number=body['engine_number'])
+        user = Account.objects.get(id=body["user_id"])
+        car = Cars.objects.get(engine_number=body["engine_number"])
         print(user)
         print(car)
         car.user = user
@@ -89,9 +89,10 @@ class GetCustomers(generics.ListAPIView):
 #         #     print(serializerObj.errors)
 #         return Response(serializerObj.data, 200)
 
+
 class CarAvailabilityPagination(PageNumberPagination):
     page_size = 10
-    page_size_query_param = 'page_size'
+    page_size_query_param = "page_size"
     max_page_size = 100
 
 
@@ -99,22 +100,22 @@ class CarAvilabilty(generics.ListAPIView):
     # permission_classes = [IsFrontDesk]
     def __init__(self, *args, **kwargs):
         # q = ProductOrder.objects.values('Category').distinct()
-        test = Cars.objects.values('model_name').distinct()
-
+        # test = Cars.objects.values("model_name").distinct()
+        pass
 
     model = Cars
     serializer_class = CarAvailabilitySerializer
     queryset = Cars.objects.filter(Q(is_deleted=False) & Q(user=None))
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['model_name', 'model_year', 'type', 'gear_type', 'colour']
+    filterset_fields = ["model_name", "model_year", "type", "gear_type", "colour"]
     pagination_class = CarAvailabilityPagination
 
 
 class GetFilterData(APIView):
 
     def get(self, request):
-        model_names = Cars.objects.values('model_name').distinct(),
-        model_years = Cars.objects.values('model_year').distinct(),
+        model_names = (Cars.objects.values("model_name").distinct(),)
+        model_years = (Cars.objects.values("model_year").distinct(),)
 
         model_names = list(itertools.chain(*model_names))
         model_years = list(itertools.chain(*model_years))
@@ -127,22 +128,27 @@ class GetFilterData(APIView):
         for i in model_years:
             model_years_list.append(i["model_year"])
 
-        data = {"model_names": model_names_list,
-                "model_years": model_years_list,
-                "types": ['Sedan', 'SUV', 'Hatchback'],
-                "gear_types": ['DCT', 'AMT', 'manual'],
-                "colours": ['Red', 'Green', 'Blue', 'White']
-                }
+        data = {
+            "model_names": model_names_list,
+            "model_years": model_years_list,
+            "types": ["Sedan", "SUV", "Hatchback"],
+            "gear_types": ["DCT", "AMT", "manual"],
+            "colours": ["Red", "Green", "Blue", "White"],
+        }
 
         return Response(data, status=status.HTTP_200_OK)
 
 
 class AddDisplayCars(generics.ListCreateAPIView):
 
-
     parser_classes = [JSONParser]
     pagination_class = DisplayCarsPagination
-    queryset = DisplayCars.objects.filter(~Q(is_deleted=True)).prefetch_related('colour','gear_type','fuel_type').order_by('-id').all()
+    queryset = (
+        DisplayCars.objects.filter(~Q(is_deleted=True))
+        .prefetch_related("colour", "gear_type", "fuel_type")
+        .order_by("-id")
+        .all()
+    )
 
     serializer_class = DisplayCarsSerializer
 
@@ -180,7 +186,7 @@ class DisplayCarCreate(APIView):
 class DisplayCarsStatusUpdator(generics.RetrieveUpdateAPIView):
     queryset = DisplayCars.objects.all()
     serializer_class = DisplayCarsSerializer
-    lookup_field = 'id'
+    lookup_field = "id"
 
 
 # class DisplayCarsPictureUpdator(generics.CreateAPIView):
@@ -188,23 +194,27 @@ class DisplayCarsStatusUpdator(generics.RetrieveUpdateAPIView):
 #     queryset = DisplayCarImages.objects.all()
 #     serializer_class = DisplayCarsImageCreateSerializer
 
-    # def post(self,request):
-    #     print(request.data)
-    #
-    #     return  Response(status= status.HTTP_201_CREATED)
+# def post(self,request):
+#     print(request.data)
+#
+#     return  Response(status= status.HTTP_201_CREATED)
+
 
 class DisplayCarsPictureUpdator(APIView):
 
     parser_classes = [MultiPartParser]
-    def post(self,request):
+
+    def post(self, request):
         print(request.data)
         print(request.FILES)
-        displaycar = DisplayCars.objects.get(id= request.data['id'])
+        displaycar = DisplayCars.objects.get(id=request.data["id"])
         for i in request.FILES:
-            discar = DisplayCarImages.objects.create(car=displaycar, image=request.FILES[i])
+            discar = DisplayCarImages.objects.create(
+                car=displaycar, image=request.FILES[i]
+            )
             discar.save()
             print(i)
-        print(request.data['id'])
+        print(request.data["id"])
 
         return Response(status=status.HTTP_201_CREATED)
 
@@ -212,20 +222,18 @@ class DisplayCarsPictureUpdator(APIView):
 class DisplayCarPatcher(generics.UpdateAPIView):
     serializer_class = DisplayCarsSerializer
     queryset = DisplayCars.objects.all()
-    lookup_field = 'pk'
-
-
+    lookup_field = "pk"
 
 
 class FrontDeskDashboard(APIView):
     def get(self, request):
-        pending_task = CarEnquiresmodel.objects.filter(status='pending').count()
+        pending_task = CarEnquiresmodel.objects.filter(status="pending").count()
         print(pending_task)
         online_advisors = AdvisorsOnline.objects.filter(online=True).count
         print(online_advisors)
-        new_service_requests = Services.objects.filter(status='requested').count()
+        new_service_requests = Services.objects.filter(status="requested").count()
         print(new_service_requests)
-        dash = Dashboard(pending_task,new_service_requests,online_advisors)
+        dash = Dashboard(pending_task, new_service_requests, online_advisors)
 
         serializer_obj = FrontDeskDashboardSerializer(dash)
-        return Response(serializer_obj.data,status=status.HTTP_200_OK)
+        return Response(serializer_obj.data, status=status.HTTP_200_OK)

@@ -1,20 +1,22 @@
 from rest_framework import serializers
-from .models import AdvisorsOnline
-from services.models import BayDetails, BayCurrentJob, Services
+
 from account.models import Account
 from cars.models import Cars
+from services.models import BayCurrentJob, Services
+
+from .models import AdvisorsOnline
 
 
 class CarDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cars
-        fields = ['model_name', 'model_year']
+        fields = ["model_name", "model_year"]
 
 
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ['username', 'id']
+        fields = ["username", "id"]
 
 
 class MakeOnlineSerializer(serializers.ModelSerializer):
@@ -22,13 +24,13 @@ class MakeOnlineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AdvisorsOnline
-        fields = '__all__'
+        fields = "__all__"
 
 
 class BayCurrentJobSerializer(serializers.ModelSerializer):
     class Meta:
         model = BayCurrentJob
-        fields = '__all__'
+        fields = "__all__"
 
 
 class SerivesCurrentSerializer(serializers.ModelSerializer):
@@ -38,14 +40,14 @@ class SerivesCurrentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Services
-        fields = '__all__'
+        fields = "__all__"
 
 
 class JobAssignBaySerializer(serializers.ModelSerializer):
     # bay = BayCurrentJobSerializer(many=True)
     class Meta:
         model = BayCurrentJob
-        fields = '__all__'
+        fields = "__all__"
 
 
 class AdvisorDashboardSerializer(serializers.Serializer):

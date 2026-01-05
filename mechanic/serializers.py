@@ -1,26 +1,27 @@
+from django.db.models import Q
 from rest_framework import serializers
 
-from services.models import BayDetails, BayCurrentJob, Services
 from account.models import Account
-from cars.models import Cars, CarParts, UniPartNumbers
-from django.db.models import Q
+from cars.models import CarParts, Cars, UniPartNumbers
+from services.models import BayCurrentJob, BayDetails, Services
+
 
 class BayDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = BayDetails
-        fields = '__all__'
+        fields = "__all__"
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ['username']
+        fields = ["username"]
 
 
 class CarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cars
-        fields = ['model_name', 'model_year']
+        fields = ["model_name", "model_year"]
 
 
 class ServiceSerializer(serializers.ModelSerializer):
@@ -30,7 +31,7 @@ class ServiceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Services
-        fields = '__all__'
+        fields = "__all__"
 
 
 class BayCurrentJobSerializer(serializers.ModelSerializer):
@@ -38,7 +39,7 @@ class BayCurrentJobSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BayCurrentJob
-        fields = '__all__'
+        fields = "__all__"
 
 
 class LiveBaySerializer(serializers.ModelSerializer):
@@ -48,8 +49,10 @@ class LiveBaySerializer(serializers.ModelSerializer):
     is_attending = serializers.SerializerMethodField()
 
     def get_attendable(self, instance):
-        print(self.context['request'].user)
-        is_attendable = BayDetails.objects.filter(mechanic_1=self.context['request'].user).exists()
+        print(self.context["request"].user)
+        is_attendable = BayDetails.objects.filter(
+            mechanic_1=self.context["request"].user
+        ).exists()
         print(instance.mechanic_1)
         # if mechanic attending a job then mechanic cannot attend other jobs
         if is_attendable:
@@ -62,13 +65,13 @@ class LiveBaySerializer(serializers.ModelSerializer):
             return True
 
     def get_is_attending(self, instance):
-        if instance.mechanic_1 == self.context['request'].user:
+        if instance.mechanic_1 == self.context["request"].user:
             return True
         else:
             return False
 
     def get_related_bay(self, instance):
-        if instance.status == 'free':
+        if instance.status == "free":
             return []
         else:
             # return []
@@ -76,25 +79,25 @@ class LiveBaySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BayDetails
-        fields = '__all__'
+        fields = "__all__"
 
 
 class BayJoinSerializer(serializers.ModelSerializer):
     class Meta:
         model = BayDetails
-        fields = ['mechanic_1']
+        fields = ["mechanic_1"]
 
 
 class MyCurrentJobUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ['username']
+        fields = ["username"]
 
 
 class MyCurrentJobUniCarNumSerializer(serializers.ModelSerializer):
     class Meta:
         model = UniPartNumbers
-        fields = '__all__'
+        fields = "__all__"
 
 
 class MyCurrentJobCartSerializer(serializers.ModelSerializer):
@@ -102,13 +105,13 @@ class MyCurrentJobCartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cars
-        fields = ['model_name', 'model_year', 'gear_type', 'uni_car_part_num']
+        fields = ["model_name", "model_year", "gear_type", "uni_car_part_num"]
 
 
 class CurrentJobCarPartSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarParts
-        fields = ['unique_part_name', 'price', 'labour_charge']
+        fields = ["unique_part_name", "price", "labour_charge"]
 
 
 class CurrentJobCarSerializer(serializers.ModelSerializer):
@@ -119,7 +122,7 @@ class CurrentJobCarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Services
-        fields = '__all__'
+        fields = "__all__"
 
 
 class MyCurrentJobBaySerializer(serializers.ModelSerializer):
@@ -128,13 +131,13 @@ class MyCurrentJobBaySerializer(serializers.ModelSerializer):
 
     def get_current_job(self, instance):
 
-        service = Services.objects.get(status='in-bay')
+        service = Services.objects.get(status="in-bay")
 
         return CurrentJobCarSerializer(service).data
 
     class Meta:
         model = BayCurrentJob
-        fields = '__all__'
+        fields = "__all__"
 
 
 class MyCurrentJobSerializer(serializers.ModelSerializer):
@@ -146,34 +149,36 @@ class MyCurrentJobSerializer(serializers.ModelSerializer):
     #     print(MyCurrentJobBaySerializer(serializerObj).data)
     #     return MyCurrentJobBaySerializer(serializerObj).data
     def get_related_bay(self, instance):
-        serializerObj = BayCurrentJob.objects.filter(Q(bay=instance) & Q(is_completed=False)).select_related('current_job')
+        serializerObj = BayCurrentJob.objects.filter(
+            Q(bay=instance) & Q(is_completed=False)
+        ).select_related("current_job")
         print(MyCurrentJobBaySerializer(serializerObj).data)
-        return MyCurrentJobBaySerializer(serializerObj,many=True).data
+        return MyCurrentJobBaySerializer(serializerObj, many=True).data
 
     class Meta:
         model = BayDetails
-        fields = '__all__'
+        fields = "__all__"
 
 
 class CompatiblePartsSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarParts
-        fields = '__all__'
+        fields = "__all__"
 
 
 class ServicePartsUpdatorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Services
-        fields = ['parts_used']
+        fields = ["parts_used"]
 
 
 class CurrentJobFinisherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Services
-        fields = ['status']
+        fields = ["status"]
 
 
 class MakeBayFreeSerializer(serializers.ModelSerializer):
     class Meta:
         model = BayDetails
-        fields = ['status']
+        fields = ["status"]

@@ -1,3 +1,8 @@
+"""
+This file contains custom serializer for advisor
+"""
+
+
 class Dashboard:
     def __init__(self, service_done, ongoing_jobs, free_bays):
         self.service_done = service_done

@@ -1,13 +1,10 @@
-import code
-from pyexpat import model
-
 from rest_framework import serializers
 
-from .models import Cars, Colours, FuelType, GearType, DisplayCars,DisplayCarImages
+from .models import Cars, Colours, DisplayCarImages, DisplayCars, FuelType, GearType
 
 
 def power_validator(power):
-    print("power_validator")
+    # print("power_validator")
     p = int(power)
     if p < 50 or p > 300:
         raise serializers.ValidationError("power_error", code="power_error")
@@ -15,7 +12,7 @@ def power_validator(power):
 
 
 def price_validator(price):
-    print("price_validator")
+    # print("price_validator")
     p = int(price)
     if p < 100000 or p > 10000000:
         raise serializers.ValidationError("price_error", code="price_error")
@@ -35,7 +32,7 @@ class SaveStockCarSerializer(serializers.ModelSerializer):
     wheel_base = serializers.CharField(validators=[wheel_base_validator])
 
     def validate(self, data):
-        print("--")
+        # print("--")
         print(data)
         # if(data['power']=="344"):
         #     print(data['power'])
@@ -45,73 +42,82 @@ class SaveStockCarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cars
-        fields = '__all__'
+        fields = "__all__"
 
 
 class CheckEngineNumberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cars
-        fields = ['model_name', 'engine_number']
+        fields = ["model_name", "engine_number"]
 
 
 class ColourSerializer(serializers.ModelSerializer):
-    label = serializers.CharField(source='colour_name')
-    value = serializers.CharField(source='id')
+    label = serializers.CharField(source="colour_name")
+    value = serializers.CharField(source="id")
 
     class Meta:
         model = Colours
-        fields = ['value', 'label']
+        fields = ["value", "label"]
 
 
 class FuelTypeSerializer(serializers.ModelSerializer):
-    label = serializers.CharField(source='fuel_type')
-    value = serializers.CharField(source='id')
+    label = serializers.CharField(source="fuel_type")
+    value = serializers.CharField(source="id")
 
     class Meta:
         model = FuelType
-        fields = ['value', 'label']
+        fields = ["value", "label"]
 
 
 class GearTypeSerializer(serializers.ModelSerializer):
-    label = serializers.CharField(source='gear_type')
-    value = serializers.CharField(source='id')
+    label = serializers.CharField(source="gear_type")
+    value = serializers.CharField(source="id")
 
     class Meta:
         model = GearType
-        fields = ['value', 'label']
+        fields = ["value", "label"]
+
 
 class GearTypesSerializer(serializers.ModelSerializer):
     class Meta:
         model = GearType
         fields = "__all__"
 
+
 class CustomerColourSerializer(serializers.ModelSerializer):
     class Meta:
         model = Colours
         fields = "__all__"
 
+
 class DisplayCarImageSerializer(serializers.ModelSerializer):
     # images=serializers.HyperlinkedRelatedField(many=True,read_only=True,view_name='images-list')
     class Meta:
         model = DisplayCarImages
-        fields = ['image']
+        fields = ["image"]
+
+
 class DisplayCarsSerializer(serializers.ModelSerializer):
     colour = ColourSerializer(many=True)
     gear_type = GearTypeSerializer(many=True)
     fuel_type = FuelTypeSerializer(many=True)
     carimg = DisplayCarImageSerializer(many=True, read_only=True)
+
     class Meta:
         model = DisplayCars
-        fields = '__all__'
+        fields = "__all__"
+
 
 class DisplayCarsModel_nameSerializer(serializers.ModelSerializer):
     class Meta:
         model = DisplayCars
-        fields = ['model_name']
+        fields = ["model_name"]
+
+
 class DisplayCarTypesSerializer(serializers.ModelSerializer):
     class Meta:
         model = DisplayCars
-        fields = ['type']
+        fields = ["type"]
 
 
 class TestSerializer(serializers.Serializer):

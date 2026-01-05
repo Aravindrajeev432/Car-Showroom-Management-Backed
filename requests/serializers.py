@@ -1,13 +1,15 @@
-from rest_framework import serializers
-from frontdesk.models import CarEnquiresmodel
-from account.models import Account
 from django.db.models import Q
+from rest_framework import serializers
+
+from account.models import Account
+from frontdesk.models import CarEnquiresmodel
 
 
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ['id', 'username']
+        fields = ["id", "username"]
+
 
 class EnquireySerilaizer(serializers.ModelSerializer):
     class Meta:
@@ -15,11 +17,17 @@ class EnquireySerilaizer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-
 class CarEnquiresSerializer(serializers.ModelSerializer):
     def validate(self, data):
-        if CarEnquiresmodel.objects.filter(Q(user_phone=data['user_phone']) & Q(status="pending")).count() > 1:
-            car = CarEnquiresmodel.objects.filter(Q(user_phone=data['user_phone']) & Q(status="pending"))
+        if (
+            CarEnquiresmodel.objects.filter(
+                Q(user_phone=data["user_phone"]) & Q(status="pending")
+            ).count()
+            > 1
+        ):
+            car = CarEnquiresmodel.objects.filter(
+                Q(user_phone=data["user_phone"]) & Q(status="pending")
+            )
             print(car)
             raise serializers.ValidationError("a request already made")
         return data
@@ -27,12 +35,13 @@ class CarEnquiresSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarEnquiresmodel
         fields = "__all__"
-        read_only_fields = ('status',)
+        read_only_fields = ("status",)
 
 
 class CarEnquiryListCreateSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d")
+
     def get_user(self, obj):
         try:
             is_auth_user = Account.objects.get(phone_number=obj.user_phone)
@@ -44,6 +53,7 @@ class CarEnquiryListCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarEnquiresmodel
         fields = "__all__"
+
 
 #
 # class CarEnquireCreateSerializer(serializers.ModelSerializer):

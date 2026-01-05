@@ -1,23 +1,20 @@
-from django.shortcuts import render
-
 # Create your views here.
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import generics
-from rest_framework import status
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.pagination import PageNumberPagination
-
+from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from rest_framework import generics, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from frontdesk.models import CarEnquiresmodel
-from cars.models import DisplayCars
-from .serializers import CarEnquiresSerializer, CarEnquiryListCreateSerializer, \
-    EnquireySerilaizer
 
 from .pagination import EnquiryPagination
-from django.db.models import Q
+from .serializers import (
+    CarEnquiresSerializer,
+    CarEnquiryListCreateSerializer,
+    EnquireySerilaizer,
+)
 
-from asgiref.sync import async_to_sync
+
 class Enquiry(APIView):
     def post(self, request):
 
@@ -26,11 +23,11 @@ class Enquiry(APIView):
             serializerobj.save()
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
-                'enqgroup',
+                "enqgroup",
                 {
-                    'type': 'enq_message',
-                    'message': serializerobj.data,
-                }
+                    "type": "enq_message",
+                    "message": serializerobj.data,
+                },
             )
 
             return Response(data=serializerobj.data, status=status.HTTP_201_CREATED)
@@ -42,7 +39,7 @@ class Enquiry(APIView):
 class GetEnquires(APIView):
 
     def get(self, request):
-        enqs = CarEnquiresmodel.objects.select_related('user').all()
+        enqs = CarEnquiresmodel.objects.select_related("user").all()
         serializerobj = CarEnquiresSerializer(enqs, many=True)
 
         # channel_layer = get_channel_layer()
@@ -60,10 +57,10 @@ class GetEnquires(APIView):
 class CarEnquiryListCreate(generics.ListCreateAPIView):
     pagination_class = EnquiryPagination
     serializer_class = CarEnquiryListCreateSerializer
-    queryset = CarEnquiresmodel.objects.all().order_by('-created_at')
+    queryset = CarEnquiresmodel.objects.all().order_by("-created_at")
 
 
 class CarEnquiryupdate(generics.UpdateAPIView):
-    lookup_field = 'pk'
+    lookup_field = "pk"
     serializer_class = EnquireySerilaizer
     queryset = CarEnquiresmodel.objects.all()

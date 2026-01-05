@@ -1,9 +1,12 @@
-from django.db.models import signals
-from django.dispatch import receiver
-from .models import Services, ServiceHistory,BayCurrentJob
+import asyncio
 
 from channels.layers import get_channel_layer
-import asyncio
+from django.db.models import signals
+from django.dispatch import receiver
+
+from services.models import BayDetails
+
+from .models import BayCurrentJob, ServiceHistory, Services
 
 
 @receiver(signals.post_save, sender=Services)
@@ -13,12 +16,12 @@ def service_log_maker(sender, instance, created, using, **kwargs):
         pass
     else:
 
-        if instance.status == 'billing':
+        if instance.status == "billing":
 
             parts = instance.parts_used.all()
             try:
-                service_history = ServiceHistory.objects.get(service=instance)
-                print('update')
+                ServiceHistory.objects.get(service=instance)
+                # print('update')
             except ServiceHistory.DoesNotExist:
                 part_total = 0
                 labour_charge = 0
@@ -32,8 +35,8 @@ def service_log_maker(sender, instance, created, using, **kwargs):
                     total = part_total
                 else:
                     total = part_total + labour_charge
-                print(f'total for parts{part_total}')
-                print(f'total for labour charge{labour_charge}')
+                print(f"total for parts{part_total}")
+                print(f"total for labour charge{labour_charge}")
                 print("create a service log")
                 #
                 # amount = models.IntegerField()
@@ -42,27 +45,35 @@ def service_log_maker(sender, instance, created, using, **kwargs):
                 #
                 # is_free = models.BooleanField()
 
-                history = ServiceHistory.objects.create(service=instance, amount=total, parts_total=part_total,
-                                                        labour_charge=labour_charge, is_free=instance.is_free)
+                history = ServiceHistory.objects.create(
+                    service=instance,
+                    amount=total,
+                    parts_total=part_total,
+                    labour_charge=labour_charge,
+                    is_free=instance.is_free,
+                )
 
                 history.save()
 
-                bay = BayCurrentJob.objects.filter(current_job=instance).update(is_completed=True)
-                BayDetails.objects.filter(advisor=instance.advisor).update(status='free')
+                BayCurrentJob.objects.filter(current_job=instance).update(
+                    is_completed=True
+                )
+                BayDetails.objects.filter(advisor=instance.advisor).update(
+                    status="free"
+                )
 
 
-@receiver(signals.pre_save,sender=Services)
-def notificatorofservice(sender,instance,using,**kwargs):
+@receiver(signals.pre_save, sender=Services)
+def notificatorofservice(sender, instance, using, **kwargs):
 
     print(instance.user_id)
-    print(f'instance id{instance.id}')
+    print(f"instance id{instance.id}")
     channel_layer = get_channel_layer()
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(channel_layer.group_send(
-        'notification_'+str(instance.user_id),
-        {
-            'type': 'notificator',
-            'message': 'my message'
-        }
-    ))
+    loop.run_until_complete(
+        channel_layer.group_send(
+            "notification_" + str(instance.user_id),
+            {"type": "notificator", "message": "my message"},
+        )
+    )

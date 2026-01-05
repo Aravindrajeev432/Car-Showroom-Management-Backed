@@ -1,7 +1,8 @@
-from django.contrib import admin
-from django.urls import path, include, re_path
-from django.conf.urls.static import static
 from django.conf import settings
+from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import include, path
+
 from .settings import MEDIA_ROOT
 
 # from drf_yasg2.views import get_schema_view
@@ -21,21 +22,20 @@ from .settings import MEDIA_ROOT
 # )
 
 urlpatterns = [
-                  path('admin/', admin.site.urls),
-                  path('account/', include('account.urls')),
-                  path('manager/', include('manager.urls')),
-                  path('cars/', include('cars.urls')),
-                  path('frontdesk/', include('frontdesk.urls')),
-                  path('user/', include('users.urls')),
-                  path('requests/', include('requests.urls')),
-                  path('services/', include('services.urls')),
-                  path('parts/', include('parts.urls')),
-                  path('advisor/', include('advisor.urls')),
-                  path('mechanic/', include('mechanic.urls')),
-                  path('__debug__/', include('debug_toolbar.urls')),
-                  # re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-                  #     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-                  #     re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-
-                  # path('watchman/',include('watchman.urls'))
-              ] + static(settings.MEDIA_URL, document_root=MEDIA_ROOT)
+    path("admin/", admin.site.urls),
+    path("account/", include("account.urls")),
+    path("manager/", include("manager.urls")),
+    path("cars/", include("cars.urls")),
+    path("frontdesk/", include("frontdesk.urls")),
+    path("user/", include("users.urls")),
+    path("requests/", include("requests.urls")),
+    path("services/", include("services.urls")),
+    path("parts/", include("parts.urls")),
+    path("advisor/", include("advisor.urls")),
+    path("mechanic/", include("mechanic.urls")),
+    path("__debug__/", include("debug_toolbar.urls")),
+    # re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    #     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    #     re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    # path('watchman/',include('watchman.urls'))
+] + static(settings.MEDIA_URL, document_root=MEDIA_ROOT)

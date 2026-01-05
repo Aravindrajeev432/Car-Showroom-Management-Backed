@@ -1,34 +1,32 @@
-from django.db import models
-
 # Create your models here.
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.db import models
 
 
 class MyAccountManager(BaseUserManager):
     def create_user(self, username, email, phone_number, password=None):
         if not username:
-            raise ValueError('User must have username')
+            raise ValueError("User must have username")
 
         if not phone_number:
-            raise ValueError('Phone number needed')
+            raise ValueError("Phone number needed")
 
         user = self.model(
             email=self.normalize_email(email),
             username=username,
             phone_number=phone_number,
-
         )
         user.is_customer = True
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_customer(self, username, email, phone_number,password):
+    def create_customer(self, username, email, phone_number, password):
         if not username:
-            raise ValueError('User must have username')
+            raise ValueError("User must have username")
 
         if not phone_number:
-            raise ValueError('Phone number needed')
+            raise ValueError("Phone number needed")
         user = self.model(
             email=self.normalize_email(email),
             username=username,
@@ -44,7 +42,6 @@ class MyAccountManager(BaseUserManager):
             email=self.normalize_email(email),
             username=username,
             phone_number=phone_number,
-
         )
         user.is_admin = True
         user.is_active = True
@@ -97,7 +94,6 @@ class MyAccountManager(BaseUserManager):
         user = self.model(
             email=self.normalize_email(email),
             username=username,
-
             phone_number=phone_number,
         )
         user.is_customer = False
@@ -109,10 +105,10 @@ class MyAccountManager(BaseUserManager):
 
 class Account(AbstractBaseUser):
     STATUS = (
-        ('MANAGER', 'MANAGER'),
-        ('ADVISOR', 'ADVISOR'),
-        ('MECHANIC', 'MECHANIC'),
-        ('FRONT-DESK', 'FRONT-DESK')
+        ("MANAGER", "MANAGER"),
+        ("ADVISOR", "ADVISOR"),
+        ("MECHANIC", "MECHANIC"),
+        ("FRONT-DESK", "FRONT-DESK"),
     )
 
     username = models.CharField(max_length=100, unique=True)
@@ -130,8 +126,11 @@ class Account(AbstractBaseUser):
     is_active = models.BooleanField(default=True)
     is_superadmin = models.BooleanField(default=False)
 
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['phone_number', 'email', ]
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = [
+        "phone_number",
+        "email",
+    ]
 
     objects = MyAccountManager()
 

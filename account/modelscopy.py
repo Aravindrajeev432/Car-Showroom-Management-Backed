@@ -1,22 +1,20 @@
-from django.db import models
-
 # Create your models here.
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.db import models
 
 
 class MyAccountManager(BaseUserManager):
     def create_user(self, username, email, phone_number, password=None):
         if not username:
-            raise ValueError('User must have username')
+            raise ValueError("User must have username")
 
         if not phone_number:
-            raise ValueError('Phone number needed')
+            raise ValueError("Phone number needed")
 
         user = self.model(
             email=self.normalize_email(email),
             username=username,
             phone_number=phone_number,
-
         )
         user.is_customer = True
         user.set_password(password)
@@ -29,7 +27,6 @@ class MyAccountManager(BaseUserManager):
             username=username,
             password=password,
             phone_number=phone_number,
-
         )
         user.is_admin = True
         user.is_active = True
@@ -95,10 +92,10 @@ class MyAccountManager(BaseUserManager):
 
 class Account(AbstractBaseUser):
     STATUS = (
-        ('MANAGER', 'MANAGER'),
-        ('ADVISOR', 'ADVISOR'),
-        ('MECHANIC', 'MECHANIC'),
-        ('FRONT-DESK', 'FRONT-DESK')
+        ("MANAGER", "MANAGER"),
+        ("ADVISOR", "ADVISOR"),
+        ("MECHANIC", "MECHANIC"),
+        ("FRONT-DESK", "FRONT-DESK"),
     )
 
     username = models.CharField(max_length=100)
@@ -109,8 +106,7 @@ class Account(AbstractBaseUser):
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now_add=True)
     is_customer = models.BooleanField(default=False)
-    role = models.CharField(max_length=100,null=True,choices=STATUS)
-
+    role = models.CharField(max_length=100, null=True, choices=STATUS)
 
     is_front_desk = models.BooleanField(default=False)
     is_advisor = models.BooleanField(default=False)
@@ -123,8 +119,11 @@ class Account(AbstractBaseUser):
     is_active = models.BooleanField(default=True)
     is_superadmin = models.BooleanField(default=False)
 
-    USERNAME_FIELD = 'phone_number'
-    REQUIRED_FIELDS = ['username', 'email', ]
+    USERNAME_FIELD = "phone_number"
+    REQUIRED_FIELDS = [
+        "username",
+        "email",
+    ]
 
     objects = MyAccountManager()
 

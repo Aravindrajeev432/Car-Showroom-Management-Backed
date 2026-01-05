@@ -1,15 +1,9 @@
-from djangochannelsrestframework.generics import GenericAsyncAPIConsumer, AsyncAPIConsumer
+import json
 
-from djangochannelsrestframework.observer import model_observer
-from djangochannelsrestframework.decorators import action
-from djangochannelsrestframework.mixins import (
-    ListModelMixin,
-    RetrieveModelMixin,
-    PatchModelMixin,
-    UpdateModelMixin,
-    CreateModelMixin,
-    DeleteModelMixin,
-)
+from channels.db import database_sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer
+
+from frontdesk.models import CarEnquiresmodel
 
 #
 # from frontdesk.models import CarEnquires
@@ -21,22 +15,11 @@ from djangochannelsrestframework.mixins import (
 #
 
 
-import json
-
-from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.db import database_sync_to_async
-
-from frontdesk.models import CarEnquiresmodel
-
-
 class RequestConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
-        self.room_group_name = 'enqgroup'
-        await(self.channel_layer.group_add)(
-            self.room_group_name,
-            self.channel_name
-        )
+        self.room_group_name = "enqgroup"
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         print("connect")
         # token = self.scope['headers'][b'authorization'].decode().split(' ')[1]
         # print(token)
@@ -45,11 +28,8 @@ class RequestConsumer(AsyncWebsocketConsumer):
 
     async def enq_message(self, event):
         print("enq_message")
-        message = event['message']
-        await self.send(text_data=json.dumps({
-            'type': 'get-enq',
-            'message': message
-        }))
+        message = event["message"]
+        await self.send(text_data=json.dumps({"type": "get-enq", "message": message}))
 
     @database_sync_to_async
     def get_enqs(self):

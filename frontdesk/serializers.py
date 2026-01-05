@@ -1,17 +1,14 @@
 from rest_framework import serializers
-from django.core.serializers import serialize
 
-from cars.models import Cars, DisplayCars, DisplayCarImages
 from account.models import Account
-from cars.serializers import ColourSerializer, FuelTypeSerializer,\
-    GearTypeSerializer
-import json
+from cars.models import Cars, DisplayCarImages, DisplayCars
+from cars.serializers import ColourSerializer, FuelTypeSerializer, GearTypeSerializer
 
 
 class CarSerialoizer(serializers.ModelSerializer):
     class Meta:
         model = Cars
-        fields = '__all__'
+        fields = "__all__"
 
 
 class GetCustomersSerializer(serializers.ModelSerializer):
@@ -19,20 +16,20 @@ class GetCustomersSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Account
-        fields = ('username', 'id', 'usercar')
+        fields = ("username", "id", "usercar")
         # depth = 1
 
 
 class CarAvailabilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Cars
-        fields = '__all__'
+        fields = "__all__"
 
 
-class DisplayCarImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DisplayCarImages
-        fields = '__all__'
+# class DisplayCarImageSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = DisplayCarImages
+#         fields = '__all__'
 
 
 class DisplayCarsImageCreateSerializer(serializers.ModelSerializer):
@@ -45,7 +42,7 @@ class DisplayCarImageSerializer(serializers.ModelSerializer):
     # images=serializers.HyperlinkedRelatedField(many=True,read_only=True,view_name='images-list')
     class Meta:
         model = DisplayCarImages
-        fields = ['image']
+        fields = ["image"]
 
 
 class DisplayCarsSerializer(serializers.ModelSerializer):
@@ -56,20 +53,20 @@ class DisplayCarsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DisplayCars
-        fields = '__all__'
+        fields = "__all__"
 
     def create(self, validated_data):
-        request = self.context['request']
+        request = self.context["request"]
         print(request.data)
 
-        colour = request.data.get('colour')
-        validated_data['colour'] = colour
+        colour = request.data.get("colour")
+        validated_data["colour"] = colour
 
-        gear_type = request.data.get('gear_type')
-        validated_data['gear_type'] = gear_type
+        gear_type = request.data.get("gear_type")
+        validated_data["gear_type"] = gear_type
 
-        fuel_type = request.data.get('fuel_type')
-        validated_data['fuel_type'] = fuel_type
+        fuel_type = request.data.get("fuel_type")
+        validated_data["fuel_type"] = fuel_type
 
         instance = super().create(validated_data)
         return instance

@@ -1,27 +1,24 @@
-from django.shortcuts import render
-from rest_framework import generics
-from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework import filters
 from django.db.models import Q
 from django.http import HttpResponse
-
-from django_auto_prefetching import AutoPrefetchViewSetMixin
-
-# Create your views here.
-from .models import Services, ServiceInfo, BayDetails
-from .serializers import SerivesSerializer, UniCarNumSerializer, ServiceInfoSerializer, \
-    BayDetailsSerializer, ServiceAssignSerializer
-from cars.models import Cars
-from .pagination import ServiceInfoPagination
-
 from django.template.loader import get_template
+from django_auto_prefetching import AutoPrefetchViewSetMixin
+from rest_framework import filters, generics, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from xhtml2pdf import pisa
 
-import datetime
-from dateutil import relativedelta
+from cars.models import Cars
+
+# Create your views here.
+from .models import BayDetails, ServiceInfo, Services
+from .pagination import ServiceInfoPagination
+from .serializers import (
+    BayDetailsSerializer,
+    SerivesSerializer,
+    ServiceAssignSerializer,
+    ServiceInfoSerializer,
+    UniCarNumSerializer,
+)
 
 
 class AllServices(AutoPrefetchViewSetMixin, generics.ListAPIView):
@@ -32,8 +29,17 @@ class AllServices(AutoPrefetchViewSetMixin, generics.ListAPIView):
 class GetUniCarNum(AutoPrefetchViewSetMixin, APIView):
     def get(self, request):
         # universal car number
-        uni_car_num = Cars.objects.values('universal_car_number').distinct('universal_car_number').filter(
-            ~Q(universal_car_number__in=ServiceInfo.objects.all().values_list('universal_car_number', flat=True)))
+        uni_car_num = (
+            Cars.objects.values("universal_car_number")
+            .distinct("universal_car_number")
+            .filter(
+                ~Q(
+                    universal_car_number__in=ServiceInfo.objects.all().values_list(
+                        "universal_car_number", flat=True
+                    )
+                )
+            )
+        )
 
         serializerobj = UniCarNumSerializer(uni_car_num, many=True)
 
@@ -44,7 +50,9 @@ class GetUniCarNum(AutoPrefetchViewSetMixin, APIView):
 # from car models all universal car number
 class GetDistinctUniCarNum(generics.ListAPIView):
     serializer_class = UniCarNumSerializer
-    queryset = Cars.objects.values('universal_car_number').distinct('universal_car_number')
+    queryset = Cars.objects.values("universal_car_number").distinct(
+        "universal_car_number"
+    )
 
 
 class AddServiceInfo(generics.CreateAPIView):
@@ -57,7 +65,7 @@ class ShowServiceinfo(generics.ListAPIView):
     serializer_class = ServiceInfoSerializer
     queryset = ServiceInfo.objects.all()
     filter_backends = [filters.SearchFilter]
-    search_fields = ['universal_car_number']
+    search_fields = ["universal_car_number"]
 
 
 class RequestService(APIView):
@@ -65,14 +73,15 @@ class RequestService(APIView):
         # {'car':'car_id'}
         print(request.data)
         try:
-            car = Cars.objects.get(id=request.data['car'])
-            service_check = Services.objects.filter(Q(car=car) & ~Q(status='finished'))
+            car = Cars.objects.get(id=request.data["car"])
+            service_check = Services.objects.filter(Q(car=car) & ~Q(status="finished"))
             if not service_check.exists():
                 print("Okay to accept the request")
 
                 try:
-                    service_info = ServiceInfo.objects.get(universal_car_number=car.universal_car_number)
-
+                    service_info = ServiceInfo.objects.get(
+                        universal_car_number=car.universal_car_number
+                    )
 
                 except ServiceInfo.DoesNotExist:
                     return Response(status=status.HTTP_404_NOT_FOUND)
@@ -83,7 +92,9 @@ class RequestService(APIView):
                 else:
                     is_free = False
 
-                service = Services.objects.create(car=car, status='requested', user=request.user, is_free=is_free)
+                service = Services.objects.create(
+                    car=car, status="requested", user=request.user, is_free=is_free
+                )
                 service.save()
 
                 return Response(status=status.HTTP_201_CREATED)
@@ -110,12 +121,12 @@ class Service(APIView):
 class ServiceAssignAdvisor(generics.UpdateAPIView):
     serializer_class = ServiceAssignSerializer
     queryset = Services.objects.all()
-    lookup_field = 'id'
+    lookup_field = "id"
 
 
 class GetFreeBays(generics.ListAPIView):
     serializer_class = BayDetailsSerializer
-    queryset = BayDetails.objects.filter(status='free')
+    queryset = BayDetails.objects.filter(status="free")
 
 
 # class ServiceCompleter(generics.UpdateAPIView):
@@ -123,14 +134,16 @@ class GetFreeBays(generics.ListAPIView):
 #     queryset = Services.objects.all()
 #     lookup_field = 'pk'
 
-class ServiceCompleter(APIView):
-    def post(self,request):
-        print(request.data['service_id'])
-        print(request.data['make_complete'])
-        if request.data['make_complete']:
-            Services.objects.filter(id=request.data['service_id']).update(status='finished')
-        return Response(status=status.HTTP_202_ACCEPTED)
 
+class ServiceCompleter(APIView):
+    def post(self, request):
+        print(request.data["service_id"])
+        print(request.data["make_complete"])
+        if request.data["make_complete"]:
+            Services.objects.filter(id=request.data["service_id"]).update(
+                status="finished"
+            )
+        return Response(status=status.HTTP_202_ACCEPTED)
 
 
 def billgenerator(request, id):
@@ -143,26 +156,23 @@ def billgenerator(request, id):
             total = t.amount
 
         context = {
-            'service': service,
-            'parts': service.parts_used.all(),
-            'total': total
-
+            "service": service,
+            "parts": service.parts_used.all(),
+            "total": total,
         }
     except Services.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    template_path = 'pdf/invoice.html'
+    template_path = "pdf/invoice.html"
 
-    response = HttpResponse(content_type='application/pdf')
+    response = HttpResponse(content_type="application/pdf")
 
-    response['Content-Disposition'] = 'filename="invoice.pdf"'
+    response["Content-Disposition"] = 'filename="invoice.pdf"'
 
     template = get_template(template_path)
 
     html = template.render(context)
-    pisa_status = pisa.CreatePDF(
-        html, dest=response
-    )
+    pisa_status = pisa.CreatePDF(html, dest=response)
     if pisa_status.err:
-        return HttpResponse('We had some errors <pre>' + html + '</pre>')
+        return HttpResponse("We had some errors <pre>" + html + "</pre>")
     return response

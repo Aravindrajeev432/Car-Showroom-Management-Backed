@@ -1,14 +1,19 @@
 """Module for Making custom Permissions"""
+
 from rest_framework.permissions import BasePermission
 
 
 class IsManager(BasePermission):
-    """ For Manager returns True """
+    """For Manager returns True"""
 
     def has_permission(self, request, view):
-        # checking for anonymous users
+        """
+        checking for anonymous users
+        """
         try:
-            # returns true or false
+            """
+            returns true or false
+            """
             if request.user.role == "MANAGER":
                 return True
         except AttributeError:
@@ -18,11 +23,11 @@ class IsManager(BasePermission):
 
 
 class IsAdvisor(BasePermission):
-    """ For Advisor returns True """
+    """For Advisor returns True"""
 
     def has_permission(self, request, view):
         try:
-            if request.user.role == 'ADVISOR':
+            if request.user.role == "ADVISOR":
                 return True
         except AttributeError:
             return False
@@ -31,14 +36,14 @@ class IsAdvisor(BasePermission):
 
 
 class IsMechanic(BasePermission):
-    """ For Mechanic returns True """
+    """For Mechanic returns True"""
 
     def has_permission(self, request, view):
         # checking for anonymous users
         try:
             # returns true or false
 
-            if request.user.role == 'MECHANIC':
+            if request.user.role == "MECHANIC":
                 return True
 
         except AttributeError:
@@ -48,13 +53,17 @@ class IsMechanic(BasePermission):
 
 
 class IsFrontDesk(BasePermission):
-    """ For Front desk employee returns True """
+    """For Front desk employee returns True"""
 
     def has_permission(self, request, view):
-        # checking for anonymous users
+        """
+        checking for anonymous users
+        """
         try:
-            # returns true or false
-            print(request.user.role)
+            """
+            returns true or false
+            """
+            # print(request.user.role)
             if request.user.role == "FRONT-DESK":
                 return True
 

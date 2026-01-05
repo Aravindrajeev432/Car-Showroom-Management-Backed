@@ -1,9 +1,11 @@
-from rest_framework import serializers
-from cars.models import Cars, DisplayCars, DisplayCarImages
-from services.models import Services, ServiceInfo,ServiceHistory
-from django.db.models import Q
 import datetime
+
 from dateutil import relativedelta
+from django.db.models import Q
+from rest_framework import serializers
+
+from cars.models import Cars, DisplayCarImages
+from services.models import ServiceHistory, ServiceInfo, Services
 
 
 class DisplaySingleCarImageSerializer(serializers.HyperlinkedModelSerializer):
@@ -12,13 +14,13 @@ class DisplaySingleCarImageSerializer(serializers.HyperlinkedModelSerializer):
     asd = serializers.SerializerMethodField()
 
     def get_asd(self, request):
-        print(self.context['id'])
+        print(self.context["id"])
 
         return None
 
     class Meta:
         model = DisplayCarImages
-        fields = ('image', 'asd')
+        fields = ("image", "asd")
 
 
 class MyCarsSerializer(serializers.ModelSerializer):
@@ -31,7 +33,9 @@ class MyCarsSerializer(serializers.ModelSerializer):
     current_service_status = serializers.SerializerMethodField()
 
     def get_current_service_status(self, instance):
-        cur_service_status = Services.objects.filter(Q(car=instance) & ~Q(status='finished'))[:1]
+        cur_service_status = Services.objects.filter(
+            Q(car=instance) & ~Q(status="finished")
+        )[:1]
         # print(f"cur_service_status_count{cur_service_status.count()}")
         if cur_service_status.count() == 1:
             # print("ome")
@@ -65,7 +69,9 @@ class MyCarsSerializer(serializers.ModelSerializer):
     #     return None
 
     def get_last_service_date(self, instance):
-        last_service_date = Services.objects.filter(car=instance).order_by('-finished_at')[:1]
+        last_service_date = Services.objects.filter(car=instance).order_by(
+            "-finished_at"
+        )[:1]
         if last_service_date.exists():
             print("%%%")
             for i in last_service_date:
@@ -81,7 +87,9 @@ class MyCarsSerializer(serializers.ModelSerializer):
         print(instance.model_name)
 
         try:
-            service_info = ServiceInfo.objects.get(universal_car_number=instance.universal_car_number)
+            service_info = ServiceInfo.objects.get(
+                universal_car_number=instance.universal_car_number
+            )
         except ServiceInfo.DoesNotExist:
 
             return None
@@ -89,14 +97,16 @@ class MyCarsSerializer(serializers.ModelSerializer):
         number_of_services = Services.objects.filter(car=instance.id).count()
         # print(f"number of service-{number_of_services}")
         delivered_date = Cars.objects.get(id=instance.id)
-        r = relativedelta.relativedelta(datetime.date.today(), delivered_date.delivered_date)
-        print(f'number of services {number_of_services}')
+        r = relativedelta.relativedelta(
+            datetime.date.today(), delivered_date.delivered_date
+        )
+        print(f"number of services {number_of_services}")
         if number_of_services == 0:
 
             # print(f"{datetime.date.today()}")
             # print(f"d_date-{delivered_date.delivered_date}")
             # print(f"first month-{service_info.first_service_month}")
-            print(f'r months {r.months}')
+            print(f"r months {r.months}")
             if r.months >= service_info.first_service_month:
                 return "first"
 
@@ -110,8 +120,12 @@ class MyCarsSerializer(serializers.ModelSerializer):
 
         elif number_of_services == 3:
 
-            last_service_date = Services.objects.filter(car=instance).order_by('-finished_at')[:1]
-            r = relativedelta.relativedelta(datetime.date.today(), last_service_date.finished_at)
+            last_service_date = Services.objects.filter(car=instance).order_by(
+                "-finished_at"
+            )[:1]
+            r = relativedelta.relativedelta(
+                datetime.date.today(), last_service_date.finished_at
+            )
             if r.months >= service_info.afterwards_service_month:
                 return "afterwards"
 
@@ -119,20 +133,29 @@ class MyCarsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cars
-        fields = '__all__'
+        fields = "__all__"
+
+
 class CarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cars
-        fields = ['model_name','model_year',]
+        fields = [
+            "model_name",
+            "model_year",
+        ]
+
 
 class ServiceSerializer(serializers.ModelSerializer):
-    car=CarSerializer()
+    car = CarSerializer()
+
     class Meta:
-        model= Services
-        fields = ['id','created_at','status','is_free','car','advisor']
+        model = Services
+        fields = ["id", "created_at", "status", "is_free", "car", "advisor"]
+
 
 class ServiceHistorySerializer(serializers.ModelSerializer):
     service = ServiceSerializer()
+
     class Meta:
         model = ServiceHistory
-        fields= '__all__'
+        fields = "__all__"

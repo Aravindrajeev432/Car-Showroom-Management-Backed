@@ -1,17 +1,21 @@
-from rest_framework.views import APIView
-from rest_framework import status
+from django.db.models import Q
+from django_auto_prefetching import AutoPrefetchViewSetMixin
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import json
-from rest_framework import generics
-from django.db.models import Q
-import itertools
-from .models import Cars, Colours, GearType, FuelType, DisplayCars
-from .serializers import SaveStockCarSerializer, CheckEngineNumberSerializer, ColourSerializer, GearTypeSerializer, \
-    FuelTypeSerializer, DisplayCarsSerializer, DisplayCarsModel_nameSerializer, DisplayCarTypesSerializer, \
-    GearTypesSerializer
-from django_filters.rest_framework import DjangoFilterBackend
-from django_auto_prefetching import AutoPrefetchViewSetMixin
+
+from .models import Cars, Colours, DisplayCars, FuelType, GearType
+from .serializers import (
+    ColourSerializer,
+    DisplayCarsSerializer,
+    DisplayCarTypesSerializer,
+    FuelTypeSerializer,
+    GearTypeSerializer,
+    GearTypesSerializer,
+    SaveStockCarSerializer,
+)
+
 
 # Create your views here.
 class AddNewCar(APIView):
@@ -21,7 +25,7 @@ class AddNewCar(APIView):
         body = request.data
         print(body)
         print(type(body))
-        body['verified_by'] = request.user.username
+        body["verified_by"] = request.user.username
         serializer = SaveStockCarSerializer(data=body)
         if serializer.is_valid():
             print("valid")
@@ -47,14 +51,15 @@ class CheckEngineNumber(APIView):
             print(car.user)
             if car.user is not None:
                 return Response(status=status.HTTP_409_CONFLICT)
-            data = {"id": car.id,
-                    "model_name": car.model_name,
-                    "model_year": car.model_year,
-                    "colour": car.colour,
-                    "gear_type": car.gear_type,
-                    "fuel_type": car.fuel_type,
-                    "seat_capacity": car.seat_capacity,
-                    }
+            data = {
+                "id": car.id,
+                "model_name": car.model_name,
+                "model_year": car.model_year,
+                "colour": car.colour,
+                "gear_type": car.gear_type,
+                "fuel_type": car.fuel_type,
+                "seat_capacity": car.seat_capacity,
+            }
             return Response(data=data, status=status.HTTP_200_OK)
 
             # serializerObj = CheckEngineNumberSerializer(data=car,many=True)
@@ -75,30 +80,30 @@ class CheckEngineNumber(APIView):
 #         queryset = DisplayCars.objects.values('model_name','type').distinct()
 #         serializer_class = DisplayCarsModel_nameSerializer
 
+
 class GetFilterData(APIView):
     def get(self, request):
-        gear_types = GearType.objects.values('gear_type')
+        gear_types = GearType.objects.values("gear_type")
         gear_typeSerializerobj = GearTypesSerializer(gear_types, many=True)
 
-        types_querysets = DisplayCars.objects.values('type').distinct()
+        types_querysets = DisplayCars.objects.values("type").distinct()
         types_serializerobj = DisplayCarTypesSerializer(types_querysets, many=True)
 
         types = []
         gear_types = []
 
         for i in gear_typeSerializerobj.data:
-            for key, value in i.items():
+            for _, value in i.items():
                 gear_types.append(value)
 
         for i in types_serializerobj.data:
-            for key, value in i.items():
+            for _, value in i.items():
                 types.append(value)
 
         data = {
-
             "types": types,
             "gear_types": gear_types,
-            "seat_capacity": ["5", "6", "7"]
+            "seat_capacity": ["5", "6", "7"],
         }
         return Response(data=data, status=status.HTTP_200_OK)
 
@@ -121,8 +126,8 @@ class GetDisplayCarsDetails(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-class UserDisplayCars(AutoPrefetchViewSetMixin,generics.ListAPIView):
+class UserDisplayCars(AutoPrefetchViewSetMixin, generics.ListAPIView):
     queryset = DisplayCars.objects.filter(Q(is_active=True))
     serializer_class = DisplayCarsSerializer
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['type', 'gear_type', 'seat_capacity']
+    filterset_fields = ["type", "gear_type", "seat_capacity"]
